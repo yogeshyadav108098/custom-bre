@@ -1,0 +1,23 @@
+{
+    "name": "custom-bre",
+    "version": "1.0.0",
+    "description": "Custom BRE",
+    "main": "app.js",
+    "scripts": {
+        "setup": "npm install && npm i -D dotenv",
+        "start": "node -r dotenv/config app.js",
+        "start:production": "node app.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "dotenv": "^8.2.0"
+    },
+    "dependencies": {
+        "express": "^4.17.1",
+        "js-levenshtein": "^1.1.6",
+        "lodash": "^4.17.15",
+        "mongoose": "^5.8.9",
+        "uuid": "^3.4.0"
+    }
+}
