@@ -32,7 +32,7 @@ const allowedOperatorsForComparator = {
 const allowedOperators = Object.keys(allowedOperatorsForComparator);
 
 const traitFormat = {
-    name: `must`, comparator: `must`, value: `optional` ,valueType: `must`, weightage: `must`
+    name: `must`, comparator: `must`, value: `optional`, valueType: `must`, weightage: `must`
 };
 
 const validateRule = (rule) => {
@@ -56,6 +56,10 @@ const validateRule = (rule) => {
             return isRuleOk;
         }
 
+        if (trait.name == 'and' || trait.name == 'or') {
+            return isRuleOk;
+        }
+
         if (allowedOperators.indexOf(trait.comparator) < 0) {
             isRuleOk = false;
             return isRuleOk;
@@ -71,7 +75,7 @@ const validateRule = (rule) => {
             return isRuleOk;
         }
 
-        if ((allowedOperatorsForComparator[trait.comparator]  === `distance`) && !trait.value) {
+        if ((allowedOperatorsForComparator[trait.comparator] === `distance`) && !trait.value) {
             isRuleOk = false;
             return isRuleOk;
         }
@@ -165,6 +169,11 @@ const validateData = (data, rule) => {
 
     let traits = rule.traits;
     traits.every((trait) => {
+
+        if (trait.name == 'and' || trait.name == 'or') {
+            return isDataOk;
+        }
+
         if (data[trait.name] === null) {
             isDataOk = false;
             return isDataOk;
@@ -183,8 +192,27 @@ const validateData = (data, rule) => {
 
 const calculateWeightageForTraitSet = (dataSet1, dataSet2, rule) => {
     let totalWeightage = 0;
+    let highestWeightage = 0;
+    let lowestWeightage = 0;
     let traits = rule.traits;
     traits.forEach((trait) => {
+
+        if (trait.name == 'and') {
+            if (totalWeightage < lowestWeightage) {
+                lowestWeightage = totalWeightage;
+            }
+            totalWeightage = 0;
+            return;
+        }
+
+        if (trait.name == 'or') {
+            if (totalWeightage > highestWeightage) {
+                highestWeightage = totalWeightage;
+            }
+            totalWeightage = 0;
+            return;
+        }
+
         switch (trait.comparator) {
             case `equals`:
                 if (dataSet1[trait.name] === dataSet2[trait.name]) {
