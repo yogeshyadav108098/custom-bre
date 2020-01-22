@@ -25,7 +25,7 @@ const allowedOperatorsForComparator = {
     older: [`Date`],
     younger: [`Date`],
 
-    distance: [`string`]
+    distance: [`string`, `Date`]
 
 };
 
@@ -179,6 +179,16 @@ const validateData = (data, rule) => {
             return isDataOk;
         }
 
+
+        if (trait.valueType === `Date`) {
+            let dataDate = new Date(data[trait.name]);
+            if (typeof dataDate != `object` && dataDate.getFullYear() > 0) {
+                isDataOk = false;
+                return isDataOk;
+            }
+            return isDataOk;
+        }
+
         if (trait.valueType !== typeof data[trait.name]) {
             isDataOk = false;
             return isDataOk;
@@ -188,6 +198,55 @@ const validateData = (data, rule) => {
     });
 
     return isDataOk;
+}
+
+const isDateDistanceAllowed = (date1, date2, yearsAllowed, monthAllowed, daysAllowed) => {
+    try {
+        date1 = new Date(date1);
+        date2 = new Date(date2);
+        let timeDifference = Math.abs(date2.getTime() - date1.getTime());
+        let differentDays = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+        if (Math.abs(date1.getFullYear() - date2.getFullYear()) === 0 &&
+            Math.abs(date1.getMonth() - date2.getMonth()) === 0 &&
+            differentDays === 0) {
+                return false;
+        }
+
+        if (Math.abs(date1.getFullYear() - date2.getFullYear()) > yearsAllowed) {
+            return false;
+        }
+
+        if (Math.abs(date1.getMonth() - date2.getMonth()) > monthAllowed) {
+            return false;
+        }
+
+        if (Math.abs(differentDays) > daysAllowed) {
+            return false;
+        }
+
+        if (Math.abs(date1.getYear() - date2.getYear()) <= yearsAllowed) {
+
+            if (Math.abs(date1.getMonth() - date2.getMonth()) > 0) {
+                return false;
+            }
+
+            if (Math.abs(differentDays) > 0) {
+                return false;
+            }
+        }
+
+        if (Math.abs(date1.getMonth() - date2.getMonth()) <= monthAllowed) {
+            if (Math.abs(differentDays) > 0) {
+                return false;
+            }
+        }
+    }
+    catch (exception) {
+        console.log(exception);
+        return false;
+    }
+    return true;
 }
 
 const calculateWeightageForTraitSet = (dataSet1, dataSet2, rule) => {
@@ -257,7 +316,10 @@ const calculateWeightageForTraitSet = (dataSet1, dataSet2, rule) => {
                 }
                 break;
             case `distance`:
-                if (Distance(dataSet1[trait.name], dataSet2[trait.name]) <= trait.value) {
+                if (trait.valueType === `string` && Distance(dataSet1[trait.name], dataSet2[trait.name]) <= trait.value && Distance(dataSet1[trait.name], dataSet2[trait.name]) != 0) {
+                    totalWeightage += Number(trait.weightage);
+                }
+                if (trait.valueType === `Date` && isDateDistanceAllowed(dataSet1[trait.name], dataSet2[trait.name]), trait.value.year, trait.value.month, trait.value.day) {
                     totalWeightage += Number(trait.weightage);
                 }
                 break;
