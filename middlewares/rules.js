@@ -103,14 +103,15 @@ module.exports = {
     executeRule: (req, res, next) => {
 
         let rule = _.get(req, `locals.lastMiddlewareResponse.json`);
-        let dataSet1 = _.get(req, `body.dataSet1`);
-        let dataSet2 = _.get(req, `body.dataSet2`);
-
-        if (!dataSet1 || !dataSet2) {
+        if (!req.body) {
             return next(new Error(`Data not proper for rule execution`));
         }
 
-        RulesApi.executeRule(dataSet1, dataSet2, rule, (error, result) => {
+        if (_.isEmpty(rule)) {
+            return next(new Error(`No such rule to execute`));
+        }
+
+        RulesApi.executeRule(req.body, rule, (error, result) => {
             if (error) {
                 return next(error);
             }
@@ -118,7 +119,8 @@ module.exports = {
             _.set(req, `locals.lastMiddlewareResponse`, {
                 status: 200,
                 json: {
-                    weightage: result
+                    weightage: typeof result === 'boolean' ? 0 : result,
+                    breResult: result
                 }
             });
             return next();
